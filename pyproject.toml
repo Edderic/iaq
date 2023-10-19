@@ -1,0 +1,33 @@
+# [build-system]
+# requires = [
+#     "setuptools>=42",
+#     "wheel",
+# ]
+# build-backend = "setuptools.build_meta"
+
+[tool.poetry]
+name = "iaq"
+version = "0.1.0"
+description = ""
+authors = ["Edderic Ugaddan <edderic@gmail.com>"]
+packages = [
+]
+
+[tool.poetry.dependencies]
+python = ">=3.10.5,<3.12"
+pandas = '^1.4.0'
+seaborn = "*"
+matplotlib = "*"
+pymc = "*"
+jupyterlab = '*'
+sensirion-sps030 = "*"
+
+[tool.poetry.dev-dependencies]
+#graphviz = "^0.19.1"
+#pygraphviz = "^1.9" # may need to `brew install graphviz` #jonathan is having issues with 'brew install graphviz' https://panoramaed.slack.com/archives/C02LYGQ1TS8/p1646408275747849?thread_ts=1646408175.680529&cid=C02LYGQ1TS8
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
