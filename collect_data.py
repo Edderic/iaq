@@ -62,7 +62,7 @@ def get_args():
         "--interval",
         type=int,
         help="Sampling rate (in seconds)",
-        default="1",
+        default=1,
         required=False
     )
 
