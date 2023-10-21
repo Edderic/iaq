@@ -82,35 +82,43 @@ def get_args():
 
     return parser.parse_args()
 
-def read(reader, csv_path):
+
+
+def get_data(obs):
+    return {
+        'time': obs.time,
+        'pm01': obs.pm01,
+        'pm04': obs.pm04,
+        'pm25': obs.pm25,
+        'pm10': obs.pm10,
+        'n1_0': obs.n1_0,
+        'n2_5': obs.n2_5,
+        'n4_0': obs.n4_0,
+        'n10_0': obs.n10_0,
+        'diam': obs.diam,
+    }
+
+def save(data, csv_path):
+    """
+    Save the data
+
+    Parameters:
+        data: dict
+        csv_path: str
+    """
+    print(csv_path, data)
     try:
         df = pd.read_csv(csv_path)
     except FileNotFoundError:
         df = pd.DataFrame()
 
-    with reader:
-        print_header = True
-        for obs in reader():
-            data = {
-                'time': obs.time,
-                'pm01': obs.pm01,
-                'pm04': obs.pm04,
-                'pm25': obs.pm25,
-                'pm10': obs.pm10,
-                'n1_0': obs.n1_0,
-                'n2_5': obs.n2_5,
-                'n4_0': obs.n4_0,
-                'n10_0': obs.n10_0,
-                'diam': obs.diam,
-            }
-            print(csv_path, data)
-            if df.shape[0] < 0:
-                df = pd.DataFrame([data])
-            else:
-                df = pd.concat([df, pd.DataFrame(pd.Series(data))])
+    if df.shape[0] == 0:
+        df = pd.DataFrame([data])
+    else:
+        df = pd.concat([df, pd.DataFrame([data])])
 
-            if df.shape[0] > 0:
-                df.to_csv(args.csv_path_1)
+    df.to_csv(csv_path, index=False)
+
 
 if __name__ == '__main__':
     """
@@ -122,6 +130,10 @@ if __name__ == '__main__':
     reader_1 = SensorReader(args.sensor_type_1, args.sensor_path_1, interval=args.interval)
     reader_2 = SensorReader(args.sensor_type_2, args.sensor_path_2, interval=args.interval)
 
-    read(reader_1, args.csv_path_1)
-    read(reader_2, args.csv_path_2)
+    with reader_1, reader_2:
+        for obs_1, obs_2 in zip(reader_1(), reader_2()):
+            data_1 = get_data(obs_1)
+            data_2 = get_data(obs_2)
 
+            save(data_1, args.csv_path_1)
+            save(data_2, args.csv_path_2)
