@@ -5,6 +5,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 from time import sleep
+from multiprocessing import Process
 
 import pandas as pd
 from sensirion_sps030 import Sensirion
@@ -27,7 +28,7 @@ def get_args():
     )
 
     parser.add_argument(
-        "--sensor_type_1",
+        "--sensor_type",
         type=str,
         help="SPS30",
         default="SPS30",
@@ -35,26 +36,10 @@ def get_args():
     )
 
     parser.add_argument(
-        "--sensor_type_2",
-        type=str,
-        help="SPS30",
-        default="SPS30",
-        required=False
-    )
-
-    parser.add_argument(
-        "--sensor_path_1",
+        "--sensor_path",
         type=str,
         help="File path for sensor 1",
         default="/dev/ttyUSB0",
-        required=False
-    )
-
-    parser.add_argument(
-        "--sensor_path_2",
-        type=str,
-        help="File path for sensor 2",
-        default="/dev/ttyUSB1",
         required=False
     )
 
@@ -67,16 +52,9 @@ def get_args():
     )
 
     parser.add_argument(
-        "--csv_path_1",
+        "--csv_path",
         type=str,
-        help="CSV path to save data for first sensor",
-        required=True
-    )
-
-    parser.add_argument(
-        "--csv_path_2",
-        type=str,
-        help="CSV path to save data for second sensor",
+        help="CSV path to save data for sensor",
         required=True
     )
 
@@ -106,7 +84,7 @@ def save(data, csv_path):
         data: dict
         csv_path: str
     """
-    print(csv_path, data)
+    # print(csv_path, data)
     try:
         df = pd.read_csv(csv_path)
     except FileNotFoundError:
@@ -119,21 +97,22 @@ def save(data, csv_path):
 
     df.to_csv(csv_path, index=False)
 
+def read(sensor_type, sensor_path, interval, csv_path):
+    reader = SensorReader(sensor_type, sensor_path, interval=interval)
+
+    with reader:
+        for obs in reader():
+            data = get_data(obs)
+            save(data, csv_path)
+
 
 if __name__ == '__main__':
     """
-    Read two sensors.
+    Read a sensor
     """
 
     args = get_args()
 
-    reader_1 = SensorReader(args.sensor_type_1, args.sensor_path_1, interval=args.interval)
-    reader_2 = SensorReader(args.sensor_type_2, args.sensor_path_2, interval=args.interval)
-
-    with reader_1, reader_2:
-        for obs_1, obs_2 in zip(reader_1(), reader_2()):
-            data_1 = get_data(obs_1)
-            data_2 = get_data(obs_2)
-
-            save(data_1, args.csv_path_1)
-            save(data_2, args.csv_path_2)
+    read(
+        args.sensor_type, args.sensor_path, args.interval, args.csv_path,
+    )
