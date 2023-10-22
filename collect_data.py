@@ -31,15 +31,7 @@ def get_args():
     )
 
     parser.add_argument(
-        "--sensor_type",
-        type=str,
-        help="SPS30",
-        default="SPS30",
-        required=False
-    )
-
-    parser.add_argument(
-        "--sensor_path",
+        "--sensor_path_1",
         type=str,
         help="File path for sensor 1",
         default="/dev/ttyUSB0",
@@ -47,19 +39,29 @@ def get_args():
     )
 
     parser.add_argument(
-        "--interval",
-        type=int,
-        help="Sampling rate (in seconds)",
-        default=1,
+        "--sensor_path_2",
+        type=str,
+        help="File path for sensor 2",
+        default="/dev/ttyUSB1",
         required=False
     )
 
     parser.add_argument(
-        "--csv_path",
+        "--csv_path_1",
         type=str,
-        help="CSV path to save data for sensor",
-        required=True
+        help="CSV path to save data for sensor 1",
+        default='~/Developer/iaq/sensor_data_1.csv',
+        required=False
     )
+
+    parser.add_argument(
+        "--csv_path_2",
+        type=str,
+        help="CSV path to save data for sensor 2",
+        default='~/Developer/iaq/sensor_data_2.csv',
+        required=False
+    )
+
 
     return parser.parse_args()
 
@@ -101,13 +103,16 @@ def save(data, csv_path):
 
     df.to_csv(csv_path, index=False)
 
-def read(sensor_type, sensor_path, interval, csv_path):
-    reader = SensorReader(sensor_type, sensor_path, interval=interval)
+def read(sensor_path, csv_path):
+    sensirion = Sensirion(
+        port=sensor_path,
+    )
 
-    with reader:
-        for obs in reader():
-            data = get_data(obs)
-            save(data, csv_path)
+    while True:
+        mess = sensirion.read_measurement()
+        data = get_data(mess)
+        save(data, csv_path=csv_path)
+        sleep(1)
 
 
 if __name__ == '__main__':
@@ -118,15 +123,9 @@ if __name__ == '__main__':
 
     args = get_args()
 
-    sensirion = Sensirion(
-        port=args.sensor_path,
-    )
+    p2 = Process(target=read, args=(args.sensor_path_2, args.csv_path_2))
+    p2.start()
 
-    while True:
-        mess = sensirion.read_measurement()
-        data = get_data(mess)
-        save(data, csv_path=args.csv_path)
-        sleep(1)
-    # read(
-        # args.sensor_type, args.sensor_path, args.interval, args.csv_path,
-    # )
+    read(
+        args.sensor_path_1, args.csv_path_1
+    )
