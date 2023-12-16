@@ -5,7 +5,7 @@ import time
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "prefix",
+        "--prefix",
         help="The name that we'll name the two files with.",
     )
 
