@@ -6,12 +6,16 @@ def read_csv(csv_path, local_timezone='-00:00'):
     df['timestamp'] = pd.to_datetime(df['timestamp'] + f' {local_timezone}')
     return df.set_index('timestamp')
 
-def read_2_sensors(template, column='pm1', breathing_area_designator='1', ambient_area_designator='2'):
+def read_2_sensors(template, columns=None, breathing_area_designator='1', ambient_area_designator='2'):
     breathing_area_df = read_csv(template.format(breathing_area_designator))
     ambient_area_df = read_csv(template.format(ambient_area_designator))
 
-    breathing_area_df[f'{column} breathing_area'] = breathing_area_df[f'{column}']
-    ambient_area_df[f'{column} ambient_area'] = ambient_area_df[f'{column}']
+    if columns is None:
+        columns = ['pm1']
+
+    for column in columns:
+        breathing_area_df[f'{column} breathing_area'] = breathing_area_df[f'{column}']
+        ambient_area_df[f'{column} ambient_area'] = ambient_area_df[f'{column}']
 
     return {
         'breathing_area_df': breathing_area_df,
