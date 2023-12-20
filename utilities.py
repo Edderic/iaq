@@ -1,5 +1,52 @@
+from skimage.io import imread
 import pandas as pd
 import matplotlib.pyplot as plt
+
+def hmff(column):
+    """
+    Compute harmonic mean fit factor, which is a conservative way to average
+    out fit factors across different exercises.
+    """
+    denominator = (1 / column).sum()
+    numerator = column.notna().sum()
+
+    return numerator / denominator
+
+
+def bar_plot_exposure_reduction_factors(df, img_func, figsize=None, ylim=None):
+    if figsize is None:
+        figsize = (8,7)
+
+    if ylim is None:
+        ylim = (0, 150)
+
+    fig, ax = plt.subplots(figsize=figsize)
+    df.plot.bar(x='protection', y='exposure reduction factor', ax=ax)
+    ax.set_title("Exposure reduction factors")
+
+    ax.set_ylim(ylim)
+
+    for i, v in df.reset_index().iterrows():
+        #import pdb; pdb.set_trace()
+        image_url = v['image_url']
+        fit_factor = v['exposure reduction factor']
+        #print(image_url)
+        img = imread(image_url)
+        # img_resized = resize(img, (100,100
+        ax.text(i - 0.175, 0.1 + fit_factor, str(fit_factor), color='blue', fontweight='bold')
+
+        newax = fig.add_axes(img_func(fit_factor, i), anchor='NE', zorder=1)
+        newax.imshow(img)
+        newax.axis('off')
+
+
+    plt.xticks(rotation=45, ha='right')
+
+    return {
+        'fig': fig,
+        'ax': ax
+    }
+
 
 def read_csv(csv_path, local_timezone='-00:00'):
     df = pd.read_csv(csv_path)
@@ -100,6 +147,7 @@ def plot_one_graph(
     func=None,
     ax=None,
     i=None,
+    ylabel='Mass concentration (µg/m3)'
 
 ):
     """
@@ -164,14 +212,23 @@ def plot_one_graph(
     legends = first_to_plot + [e for e in event_list]
 
     axis.legend(legends)
-    axis.set_ylabel('Mass concentration (µg/m3)')
+    axis.set_ylabel(ylabel)
     axis.set_title(graph['title'])
 
     if func is not None:
         func(axis)
 
 
-def plot(metadata, breathing_area_data, ambient_data, breathing_area_vars, ambient_vars, func=None, row_size=3):
+def plot(
+    metadata,
+    breathing_area_data,
+    ambient_data,
+    breathing_area_vars,
+    ambient_vars,
+    func=None,
+    row_size=3,
+    ylabel=None
+):
     fig, ax = plt.subplots(len(metadata),1, figsize=(15, len(metadata) * row_size))
 
     for i, graph in enumerate(metadata):
@@ -183,7 +240,8 @@ def plot(metadata, breathing_area_data, ambient_data, breathing_area_vars, ambie
             ambient_vars=ambient_vars,
             ax=ax,
             i=i,
-            func=func
+            func=func,
+            ylabel=ylabel
         )
 
     fig.tight_layout()
