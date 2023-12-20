@@ -26,6 +26,8 @@ def bar_plot_exposure_reduction_factors(df, img_func, figsize=None, ylim=None):
 
     ax.set_ylim(ylim)
 
+    plt.xticks(rotation=45, ha='right')
+
     for i, v in df.reset_index().iterrows():
         #import pdb; pdb.set_trace()
         image_url = v['image_url']
@@ -40,7 +42,6 @@ def bar_plot_exposure_reduction_factors(df, img_func, figsize=None, ylim=None):
         newax.axis('off')
 
 
-    plt.xticks(rotation=45, ha='right')
 
     return {
         'fig': fig,
