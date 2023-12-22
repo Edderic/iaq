@@ -2,6 +2,28 @@ from skimage.io import imread
 import pandas as pd
 import matplotlib.pyplot as plt
 
+
+def compute_cadr_via_anemometer_grid(velocity_grid_mps, filter_width_mm, filter_length_mm):
+    """
+    Parameters:
+        velocity_grid: pd.DataFrame
+            Row and columns are velocity readings (m/s).
+        filter_width: float
+            In millimeters
+        filter_length: float
+            In millimeters
+    """
+    average_velocity = velocity_grid_mps.mean().mean()
+    usable_filter_area_m = filter_width_mm * filter_length_mm / 1000000
+
+    cubic_meters_per_hour = average_velocity * usable_filter_area_m * 3600
+    cubic_feet_per_minute = cubic_meters_per_hour * 0.588577779
+
+    return {
+        'cubic_meters_per_hour': cubic_meters_per_hour,
+        'cubic_feet_per_min': cubic_feet_per_minute
+    }
+
 def hmff(column):
     """
     Compute harmonic mean fit factor, which is a conservative way to average
